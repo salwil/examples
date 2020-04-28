@@ -64,7 +64,12 @@ with open(args.outf, 'w') as outf:
             if is_transformer_model:
                 output = model(input, False)
                 word_weights = output[-1].squeeze().div(args.temperature).exp().cpu()
-                word_idx = torch.multinomial(word_weights, 1)[0]
+                if args.strategy == 'sample':
+                    #sample search
+                    word_idx = torch.multinomial(word_weights, 1)[0]
+                else:
+                    #greedy search
+                    word_idx = torch.argmax(word_weights)                    
                 word_tensor = torch.Tensor([[word_idx]]).long().to(device)
                 input = torch.cat([input, word_tensor], 0)
             else:
