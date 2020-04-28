@@ -11,6 +11,8 @@ import torch
 
 import data
 
+import random
+
 parser = argparse.ArgumentParser(description='PyTorch Wikitext-2 Language Model')
 
 # Model parameters.
@@ -30,6 +32,8 @@ parser.add_argument('--temperature', type=float, default=1.0,
                     help='temperature - higher will increase diversity')
 parser.add_argument('--log-interval', type=int, default=100,
                     help='reporting interval')
+parser.add_argument('--strategy', type=str, default='sample',
+                    help='search type')
 args = parser.parse_args()
 
 # Set the random seed manually for reproducibility.
@@ -54,7 +58,6 @@ is_transformer_model = hasattr(model, 'model_type') and model.model_type == 'Tra
 if not is_transformer_model:
     hidden = model.init_hidden(1)
 input = torch.randint(ntokens, (1, 1), dtype=torch.long).to(device)
-
 with open(args.outf, 'w') as outf:
     with torch.no_grad():  # no tracking history
         for i in range(args.words):
@@ -67,7 +70,12 @@ with open(args.outf, 'w') as outf:
             else:
                 output, hidden = model(input, hidden)
                 word_weights = output.squeeze().div(args.temperature).exp().cpu()
-                word_idx = torch.multinomial(word_weights, 1)[0]
+                if args.strategy == 'sample':
+                    #sample search
+                    word_idx = torch.multinomial(word_weights, 1)[0]
+                else:
+                    #greedy search
+                    word_idx = torch.argmax(word_weights)
                 input.fill_(word_idx)
 
             word = corpus.dictionary.idx2word[word_idx]
