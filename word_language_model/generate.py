@@ -11,7 +11,6 @@ import torch
 
 import data
 
-import random
 
 parser = argparse.ArgumentParser(description='PyTorch Wikitext-2 Language Model')
 
